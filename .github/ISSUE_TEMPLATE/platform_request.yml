@@ -1,0 +1,76 @@
+name: Platform Request
+description: Request platform access, onboarding, quota increases, or operational changes
+labels: ["platform-request", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for operational requests such as:
+        - New namespace / team onboarding
+        - Resource quota increases
+        - Secret or access provisioning
+        - New environment setup
+
+  - type: dropdown
+    id: request_type
+    attributes:
+      label: Request Type
+      options:
+        - New Team / Namespace Onboarding
+        - Resource Quota Increase
+        - Secret / Access Provisioning
+        - New Environment Setup
+        - DNS / Ingress Configuration
+        - Certificate Request
+        - Other Operational Change
+    validations:
+      required: true
+
+  - type: input
+    id: team
+    attributes:
+      label: Requesting Team
+    validations:
+      required: true
+
+  - type: input
+    id: owner
+    attributes:
+      label: Technical Owner (GitHub handle)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Request Details
+      description: Be specific. Include namespaces, resource amounts, secret names, etc.
+    validations:
+      required: true
+
+  - type: input
+    id: deadline
+    attributes:
+      label: Required By (date)
+      placeholder: YYYY-MM-DD
+    validations:
+      required: false
+
+  - type: textarea
+    id: justification
+    attributes:
+      label: Business Justification
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have checked existing documentation before raising this request
+          required: true
+        - label: I have confirmed this is not a bug (use the bug report template if so)
+          required: true

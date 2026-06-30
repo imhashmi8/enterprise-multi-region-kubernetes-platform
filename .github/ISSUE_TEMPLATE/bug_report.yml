@@ -1,0 +1,89 @@
+name: Bug Report
+description: Report a platform bug or unexpected behaviour
+labels: ["bug", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please fill in all required fields. Incomplete reports will be triaged lower.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which platform component is affected?
+      options:
+        - EKS Cluster
+        - Terraform / Infrastructure
+        - ArgoCD / GitOps
+        - Helm Charts
+        - Monitoring / Alerting
+        - CI/CD Pipeline
+        - Network / Ingress
+        - Secret Management
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - production-us-east-1
+        - production-eu-west-1
+        - staging
+        - development
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Clear description of what is wrong.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behaviour
+      description: Include error messages, logs, and stack traces.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Business Impact
+      description: How many teams / services are affected? Is there a customer-facing impact?
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Platform Version / Commit SHA
+    validations:
+      required: false

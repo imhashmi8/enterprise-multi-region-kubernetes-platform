@@ -1,0 +1,44 @@
+# ============================================================
+# CODEOWNERS
+#
+# Each line is a file pattern followed by one or more owners.
+# The last matching pattern takes precedence.
+# Owners are required reviewers for PRs touching those paths.
+#
+# Format: <pattern> <owner> [<owner> ...]
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# ============================================================
+
+# Global fallback — Platform Engineering team owns everything by default
+*                           @your-org/platform-engineering
+
+# Repository governance
+/.github/                   @your-org/platform-engineering @your-org/engineering-leads
+/CODEOWNERS                 @your-org/engineering-leads
+
+# Infrastructure as Code — requires both platform and security review
+/terraform/                 @your-org/platform-engineering @your-org/security-team
+/terraform/stacks/          @your-org/platform-engineering
+/terraform/modules/         @your-org/platform-engineering
+
+# Kubernetes manifests
+/kubernetes/                @your-org/platform-engineering
+
+# Helm charts
+/helm/                      @your-org/platform-engineering
+
+# GitOps / ArgoCD
+/argocd/                    @your-org/platform-engineering
+
+# Observability stack
+/monitoring/                @your-org/platform-engineering @your-org/sre-team
+
+# CI/CD pipelines
+/.github/workflows/         @your-org/platform-engineering @your-org/engineering-leads
+
+# Documentation — lighter touch, any platform eng can approve
+/docs/                      @your-org/platform-engineering
+/docs/decisions/            @your-org/platform-engineering @your-org/engineering-leads
+
+# Scripts — requires security review if touching credentials or IAM
+/scripts/                   @your-org/platform-engineering @your-org/security-team
