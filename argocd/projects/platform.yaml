@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Platform engineering components — managed exclusively by the platform team
+
+  # Only this repository and approved Helm registries may be used as sources
+  sourceRepos:
+    - https://github.com/your-org/enterprise-multi-region-kubernetes-platform
+    - https://charts.jetstack.io                                  # cert-manager
+    - https://aws.github.io/eks-charts                            # AWS LBC, Karpenter
+    - https://external-secrets.github.io/external-secrets         # ESO
+    - https://prometheus-community.github.io/helm-charts          # kube-prometheus-stack
+    - https://grafana.github.io/helm-charts                       # Loki, Tempo, Grafana
+    - https://argoproj.github.io/argo-helm                        # Argo Rollouts
+
+  # Platform components may deploy to any namespace on any registered cluster
+  destinations:
+    - namespace: "*"
+      server: "*"
+
+  # Platform components need to manage cluster-scoped resources (CRDs, ClusterRoles, etc.)
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  # Sync windows — block automated syncs during peak hours on weekdays
+  syncWindows:
+    - kind: deny
+      schedule: "0 9 * * 1-5"   # weekdays 09:00 UTC
+      duration: 8h
+      applications:
+        - "*"
+      manualSync: true           # manual syncs still allowed during the window
+
+  roles:
+    - name: platform-admin
+      description: Full access for platform engineers
+      policies:
+        - p, proj:platform:platform-admin, applications, *, platform/*, allow
+      groups:
+        - platform-engineering

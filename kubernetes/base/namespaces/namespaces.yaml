@@ -1,0 +1,53 @@
+---
+# ArgoCD — GitOps controller
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+
+---
+# cert-manager — TLS certificate automation
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+  labels:
+    app.kubernetes.io/managed-by: argocd
+
+---
+# external-secrets — syncs secrets from AWS Secrets Manager
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external-secrets
+  labels:
+    app.kubernetes.io/managed-by: argocd
+
+---
+# karpenter — node autoscaling
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: karpenter
+  labels:
+    app.kubernetes.io/managed-by: argocd
+
+---
+# monitoring — Prometheus, Grafana, Loki, Tempo
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    app.kubernetes.io/managed-by: argocd
+
+---
+# ingress — AWS Load Balancer Controller
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress
+  labels:
+    app.kubernetes.io/managed-by: argocd

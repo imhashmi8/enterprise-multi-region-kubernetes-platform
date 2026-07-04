@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: platform-addons
+  namespace: argocd
+spec:
+  # Progressive syncs — roll out to clusters one at a time, not all at once
+  strategy:
+    type: RollingSync
+    rollingSync:
+      steps:
+        - matchExpressions:
+            - key: environment
+              operator: In
+              values:
+                - primary       # us-east-1 syncs first
+        - matchExpressions:
+            - key: environment
+              operator: In
+              values:
+                - secondary     # eu-west-1 syncs after primary is healthy
+
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            platform: eks-platform  # label applied to registered clusters
+
+  template:
+    metadata:
+      name: "{{name}}-platform-addons"
+      annotations:
+        argocd.argoproj.io/sync-wave: "0"
+    spec:
+      project: platform
+      source:
+        repoURL: https://github.com/your-org/enterprise-multi-region-kubernetes-platform
+        targetRevision: main
+        path: argocd/applications
+      destination:
+        server: "{{server}}"
+        namespace: argocd
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - ServerSideApply=true
+          - CreateNamespace=true

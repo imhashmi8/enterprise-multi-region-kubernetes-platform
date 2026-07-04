@@ -1,0 +1,26 @@
+# App of Apps — ArgoCD manages its own Application resources from Git.
+# Any Application added under argocd/applications/ is automatically picked up.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: platform
+  source:
+    repoURL: https://github.com/your-org/enterprise-multi-region-kubernetes-platform
+    targetRevision: main
+    path: argocd/applications
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

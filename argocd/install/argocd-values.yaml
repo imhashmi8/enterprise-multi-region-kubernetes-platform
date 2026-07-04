@@ -1,0 +1,191 @@
+global:
+  logging:
+    format: json
+    level: info
+
+configs:
+  cm:
+    # Track resources by annotation instead of label to avoid conflicts
+    application.resourceTrackingMethod: annotation
+
+    # How often ArgoCD polls Git for changes (webhook covers the rest)
+    timeout.reconciliation: 180s
+
+    # Allow ArgoCD to manage cluster-scoped resources
+    resource.compareoptions: |
+      ignoreAggregatedRoles: true
+
+    # Health check overrides for common CRDs
+    resource.customizations.health.argoproj.io_Application: |
+      hs = {}
+      hs.status = "Progressing"
+      hs.message = ""
+      if obj.status ~= nil then
+        if obj.status.health ~= nil then
+          hs.status = obj.status.health.status
+          if obj.status.health.message ~= nil then
+            hs.message = obj.status.health.message
+          end
+        end
+      end
+      return hs
+
+  rbac:
+    # Default role for authenticated users — read only
+    policy.default: role:readonly
+    policy.csv: |
+      # Platform engineers get full admin
+      p, role:platform-admin, applications, *, */*, allow
+      p, role:platform-admin, clusters, *, *, allow
+      p, role:platform-admin, repositories, *, *, allow
+      p, role:platform-admin, projects, *, *, allow
+      p, role:platform-admin, logs, get, */*, allow
+      p, role:platform-admin, exec, *, */*, allow
+
+      # Application teams — manage their own apps in the workloads project
+      p, role:app-team, applications, get, workloads/*, allow
+      p, role:app-team, applications, sync, workloads/*, allow
+      p, role:app-team, applications, override, workloads/*, allow
+      p, role:app-team, logs, get, workloads/*, allow
+
+      g, platform-engineering, role:platform-admin
+
+  params:
+    # TLS terminated at the AWS Load Balancer — ArgoCD server runs plain HTTP internally
+    server.insecure: "true"
+
+    # Disable anonymous access
+    server.enable.gzip: "true"
+
+    # Application Set controller settings
+    applicationsetcontroller.policy: sync
+    applicationsetcontroller.enable.progressive.syncs: "true"
+
+# ── ArgoCD Application Controller ─────────────────────────────────────────────
+controller:
+  replicas: 1  # Stateful — uses leader election, single active instance
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      namespace: monitoring
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+# ── ArgoCD API Server ──────────────────────────────────────────────────────────
+server:
+  replicas: 2
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      namespace: monitoring
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+  # Ingress disabled until AWS Load Balancer Controller is installed in Phase 5
+  ingress:
+    enabled: false
+
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: argocd-server
+            topologyKey: kubernetes.io/hostname
+
+# ── Repo Server ───────────────────────────────────────────────────────────────
+repoServer:
+  replicas: 2
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      namespace: monitoring
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: argocd-repo-server
+            topologyKey: kubernetes.io/hostname
+
+# ── ApplicationSet Controller ─────────────────────────────────────────────────
+applicationSet:
+  replicas: 2
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      namespace: monitoring
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+# ── Redis HA ──────────────────────────────────────────────────────────────────
+redis-ha:
+  enabled: true
+
+  redis:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 256Mi
+
+  haproxy:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+
+# ── Notifications ─────────────────────────────────────────────────────────────
+notifications:
+  enabled: true
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      namespace: monitoring
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi

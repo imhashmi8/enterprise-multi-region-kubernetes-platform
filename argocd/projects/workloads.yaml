@@ -1,0 +1,59 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: workloads
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Application team workloads — restricted to namespace-scoped resources
+
+  sourceRepos:
+    - https://github.com/your-org/*   # any repo in the org is allowed for app teams
+
+  # App teams may only deploy to their own namespaces, not cluster-wide
+  destinations:
+    - namespace: "app-*"
+      server: "*"
+    - namespace: "team-*"
+      server: "*"
+
+  # No cluster-scoped resources — app teams cannot create CRDs, ClusterRoles, etc.
+  clusterResourceWhitelist: []
+
+  namespaceResourceWhitelist:
+    - group: "apps"
+      kind: Deployment
+    - group: "apps"
+      kind: StatefulSet
+    - group: "apps"
+      kind: DaemonSet
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: ServiceAccount
+    - group: "networking.k8s.io"
+      kind: Ingress
+    - group: "autoscaling"
+      kind: HorizontalPodAutoscaler
+    - group: "policy"
+      kind: PodDisruptionBudget
+    - group: "argoproj.io"
+      kind: Rollout
+    - group: "argoproj.io"
+      kind: AnalysisTemplate
+    - group: "external-secrets.io"
+      kind: ExternalSecret
+
+  roles:
+    - name: app-team-member
+      description: Deploy and sync applications within the workloads project
+      policies:
+        - p, proj:workloads:app-team-member, applications, get, workloads/*, allow
+        - p, proj:workloads:app-team-member, applications, sync, workloads/*, allow
+        - p, proj:workloads:app-team-member, applications, override, workloads/*, allow
+        - p, proj:workloads:app-team-member, logs, get, workloads/*, allow
+      groups:
+        - application-teams
