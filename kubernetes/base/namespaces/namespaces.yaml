@@ -51,3 +51,13 @@ metadata:
   name: ingress
   labels:
     app.kubernetes.io/managed-by: argocd
+
+---
+# app-todo — sample todo application workload
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app-todo
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: todo-app

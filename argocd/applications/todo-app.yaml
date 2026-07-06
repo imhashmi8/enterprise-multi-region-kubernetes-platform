@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: todo-app
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"  # deploy after all platform add-ons are healthy
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: workloads
+
+  source:
+    repoURL: https://github.com/imhashmi8/sample-todo-app
+    targetRevision: main
+    path: helm/todo-app  # Helm chart expected at this path in the app repo
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app-todo
+
+  syncPolicy:
+    automated:
+      prune: true      # remove resources deleted from Git
+      selfHeal: true   # revert any manual changes back to Git state
+    syncOptions:
+      - CreateNamespace=false  # namespace managed by the platform (namespaces.yaml)
+      - ServerSideApply=true
