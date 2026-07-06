@@ -1,11 +1,85 @@
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
-# ── KMS key — envelope encryption for Kubernetes secrets ─────────────────────
+# ── KMS key policy ────────────────────────────────────────────────────────────
+# Without an explicit policy, the EC2 Auto Scaling service-linked role cannot
+# call CreateGrant on the key, causing EBS volumes to fail at node boot with
+# Client.InvalidKMSKey.InvalidState. The root statement is required — omitting
+# it makes the key unmanageable if all admin IAM access is later removed.
+data "aws_iam_policy_document" "eks_kms" {
+  statement {
+    sid       = "RootAdmin"
+    effect    = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "EKSSecretsEncryption"
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["eks.amazonaws.com"]
+    }
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:DescribeKey",
+      "kms:GenerateDataKey",
+    ]
+    resources = ["*"]
+  }
+
+  # EC2 Auto Scaling SLR must be able to use the key so it can create per-volume
+  # grants when launching nodes with encrypted EBS volumes.
+  statement {
+    sid    = "AutoScalingEBSUse"
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",
+      ]
+    }
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:DescribeKey",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "AutoScalingEBSGrant"
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",
+      ]
+    }
+    actions   = ["kms:CreateGrant"]
+    resources = ["*"]
+    condition {
+      test     = "Bool"
+      variable = "kms:GrantIsForAWSResource"
+      values   = ["true"]
+    }
+  }
+}
+
+# ── KMS key — envelope encryption for Kubernetes secrets + EBS node volumes ──
 resource "aws_kms_key" "eks" {
   description             = "EKS secrets encryption key — ${var.cluster_name}"
   deletion_window_in_days = 30
   enable_key_rotation     = true
+  policy                  = data.aws_iam_policy_document.eks_kms.json
 
   tags = merge(var.tags, { Name = "${var.cluster_name}-secrets-key" })
 }
