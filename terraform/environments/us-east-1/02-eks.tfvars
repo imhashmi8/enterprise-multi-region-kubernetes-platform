@@ -6,9 +6,9 @@ cost_center       = "platform"
 cluster_version   = "1.33"
 state_bucket_name = "eks-platform-terraform-state-528956693660"
 
-# Keep the API endpoint private. Access via VPN or bastion only.
-cluster_endpoint_public_access       = false
-cluster_endpoint_public_access_cidrs = []
+# Public access enabled for testing — lock this down to your IP or disable in production.
+cluster_endpoint_public_access       = true
+cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
 
 system_node_group_config = {
   instance_types = ["t3.small"]
