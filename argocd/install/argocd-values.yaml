@@ -63,13 +63,10 @@ configs:
 
 # ── ArgoCD Application Controller ─────────────────────────────────────────────
 controller:
-  replicas: 1  # Stateful — uses leader election, single active instance
+  replicas: 1
 
   metrics:
-    enabled: true
-    serviceMonitor:
-      enabled: true
-      namespace: monitoring
+    enabled: false
 
   resources:
     requests:
@@ -80,13 +77,10 @@ controller:
 
 # ── ArgoCD API Server ──────────────────────────────────────────────────────────
 server:
-  replicas: 2
+  replicas: 1
 
   metrics:
-    enabled: true
-    serviceMonitor:
-      enabled: true
-      namespace: monitoring
+    enabled: false
 
   resources:
     requests:
@@ -99,25 +93,12 @@ server:
   ingress:
     enabled: false
 
-  affinity:
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            labelSelector:
-              matchLabels:
-                app.kubernetes.io/name: argocd-server
-            topologyKey: kubernetes.io/hostname
-
 # ── Repo Server ───────────────────────────────────────────────────────────────
 repoServer:
-  replicas: 2
+  replicas: 1
 
   metrics:
-    enabled: true
-    serviceMonitor:
-      enabled: true
-      namespace: monitoring
+    enabled: false
 
   resources:
     requests:
@@ -126,25 +107,12 @@ repoServer:
     limits:
       memory: 512Mi
 
-  affinity:
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            labelSelector:
-              matchLabels:
-                app.kubernetes.io/name: argocd-repo-server
-            topologyKey: kubernetes.io/hostname
-
 # ── ApplicationSet Controller ─────────────────────────────────────────────────
 applicationSet:
-  replicas: 2
+  replicas: 1
 
   metrics:
-    enabled: true
-    serviceMonitor:
-      enabled: true
-      namespace: monitoring
+    enabled: false
 
   resources:
     requests:
@@ -153,39 +121,19 @@ applicationSet:
     limits:
       memory: 256Mi
 
-# ── Redis HA ──────────────────────────────────────────────────────────────────
+# ── Redis (standalone — HA requires 3 nodes, overkill for testing) ────────────
 redis-ha:
+  enabled: false
+
+redis:
   enabled: true
-
-  redis:
-    resources:
-      requests:
-        cpu: 100m
-        memory: 128Mi
-      limits:
-        memory: 256Mi
-
-  haproxy:
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        memory: 128Mi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
 
 # ── Notifications ─────────────────────────────────────────────────────────────
 notifications:
-  enabled: true
-
-  metrics:
-    enabled: true
-    serviceMonitor:
-      enabled: true
-      namespace: monitoring
-
-  resources:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      memory: 128Mi
+  enabled: false
