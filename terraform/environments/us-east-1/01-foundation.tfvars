@@ -1,0 +1,9 @@
+aws_region         = "us-east-1"
+environment        = "production"
+project            = "eks-platform"
+team               = "platform-engineering"
+cost_center        = "platform"
+vpc_cidr           = "10.0.0.0/16"
+availability_zones = ["a", "b", "c"]
+single_nat_gateway = false
+cluster_name       = "eks-platform-production-us-east-1"
