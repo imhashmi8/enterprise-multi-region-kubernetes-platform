@@ -13,7 +13,7 @@ cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
 system_node_group_config = {
   instance_types = ["t3.small"]
   min_size       = 1
-  max_size       = 3
+  max_size       = 2
   desired_size   = 1
   disk_size_gb   = 20
 }
@@ -21,7 +21,7 @@ system_node_group_config = {
 application_node_group_config = {
   instance_types = ["t3.medium"]
   min_size       = 1
-  max_size       = 3
+  max_size       = 2
   desired_size   = 1
   disk_size_gb   = 20
 }
